@@ -223,26 +223,6 @@ function cclist_save_product($data) {
     return true;
 }
 /**
- * Empty the products table.
- */
-function cclist_empty_products_table() {
-    global $wpdb;
-    $table_products = $wpdb->prefix . 'cclist_products';
-    return $wpdb->query("TRUNCATE TABLE $table_products");
-}
-
-/**
- * Empty the categories table
- */
-
- function cclist_empty_categories_table(){
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'cclist_categories';
-    return $wpdb->query("TRUNCATE TABLE $table_name");
- }
-
-
-/**
  * Delete a product
  */
 function cclist_delete_product($id) {
@@ -271,25 +251,11 @@ function cclist_get_categories() {
 */
 
 function add_category_if_not_exists($category){
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'cclist_categories';
-
-    // Check if the category already exists
-    $category_exists = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM $table_name WHERE category_name = %s",
-        $category
-    ));
-
-    // If the category doesn't exist, insert it
-    if (!$category_exists) {
-        $wpdb->insert(
-            $table_name,
-            array('category_name' => $category),
-            array('%s') // Format for the data being inserted
-        );
-        error_log("New category added:" . $category);
-    } else{
-      error_log("Category Exists:" . $category);
+   global $wpdb;
+    $table_categories = $wpdb->prefix . 'cclist_categories';
+    if( !$wpdb->get_row("SELECT * FROM $table_categories WHERE category_name = '" . $category . "'") ){
+      $wpdb->insert($table_categories, array('category_name' => $category));
+      error_log("adding category" . $category);
     }
 }
 
@@ -297,15 +263,13 @@ function add_category_if_not_exists($category){
  * Import products from JSON data
  */
 function cclist_import_products($json_data) {
-    $products = json_decode($json_data, true);
-   if (json_last_error() !== JSON_ERROR_NONE) {
-       return new WP_Error('invalid_json', 'Invalid JSON data provided');
-   }
+     $products = json_decode($json_data, true);
+     error_log("cclist_import_products: decoded JSON data: " . print_r($products,true));
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        return new WP_Error('invalid_json', 'Invalid JSON data provided');
+    }
 
-   // Access the 'products' key
-   $products_array = isset($products['products']) && is_array($products['products']) ? $products['products'] : array();
-
-    // Add categories if they don't already exist. Do this before the loop
+    // Add categories if they don't already exist.
     if(isset($products['available_categories']) && is_array($products['available_categories'])){
       foreach($products['available_categories'] as $category){
         add_category_if_not_exists($category);
@@ -313,20 +277,24 @@ function cclist_import_products($json_data) {
     }
 
    $success_count = 0;
-   foreach ($products_array as $product) {
-       if(empty($product['category']) && empty($product['item'])){
-         error_log("skipping empty looking product");
-         continue;
-       }
-       if (cclist_save_product($product)) {
-           $success_count++;
-       }
-   }
+
+    if(isset($products['products'])){
+        foreach ($products['products'] as $product) {
+            add_category_if_not_exists($product['category']);
+            if(empty($product['category']) && empty($product['item'])){
+            error_log("skipping empty looking product");
+            continue;
+            }
+            if (cclist_save_product($product)) {
+                $success_count++;
+            }
+        }
+    }
 
    return array(
        'success' => true,
        'imported' => $success_count,
-       'total' => count($products_array)
+       'total' => isset($products['products']) ? count($products['products']) : 0
    );
 }
 
@@ -374,3 +342,22 @@ function cclist_duplicate_group($item_name){
     }
     return true;
 }
+
+/**
+ * Empty the products table.
+ */
+function cclist_empty_products_table() {
+    global $wpdb;
+    $table_products = $wpdb->prefix . 'cclist_products';
+    return $wpdb->query("TRUNCATE TABLE $table_products");
+}
+
+/**
+ * Empty the categories table
+ */
+
+ function cclist_empty_categories_table(){
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'cclist_categories';
+    return $wpdb->query("TRUNCATE TABLE $table_name");
+ }
