@@ -263,10 +263,17 @@ function add_category_if_not_exists($category){
  * Import products from JSON data
  */
 function cclist_import_products($json_data) {
-     $products = json_decode($json_data, true);
-     error_log("cclist_import_products: decoded JSON data: " . print_r($products,true));
+    error_log("cclist_import_products: Received JSON data: " . $json_data);
+    $products = json_decode($json_data, true);
+
+
     if (json_last_error() !== JSON_ERROR_NONE) {
+        error_log("cclist_import_products: JSON decode error: " . json_last_error_msg());
         return new WP_Error('invalid_json', 'Invalid JSON data provided');
+    }
+
+    if (!is_array($products)) {
+        error_log("cclist_import_products: Decoded data is not an array.");
     }
 
     // Add categories if they don't already exist.
