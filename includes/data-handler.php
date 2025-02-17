@@ -403,8 +403,10 @@ function cclist_import_csv($csv_data) {
 
         // Combine the header and row to create an associative array
         if (count($header) !== count($row)) {
-            error_log("cclist_import_csv: Mismatch between header and row length. Skipping row.");
-            continue; // Skip rows that don't match the header length
+            error_log("cclist_import_csv: Mismatch between header and row length. Padding row with empty values.");
+            while (count($row) < count($header)) {
+                $row[] = ''; // Pad with empty values
+            }
         }
         $product_data = array_combine($header, $row);
          if ($product_data === false) {
