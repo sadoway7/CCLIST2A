@@ -1,4 +1,6 @@
 jQuery(document).ready(function($) {
+    console.log('ajaxurl:', cclistAdmin.ajaxUrl);
+
     // Group expansion/collapse
     function toggleGroup($row) {
         const $icon = $row.find('.dashicons');
@@ -200,6 +202,7 @@ jQuery(document).ready(function($) {
     // Form handling
     $(document).on('submit', '#product-form', function(e) {
         e.preventDefault();
+        console.log('Form submit handler attached');
         const $form = $(this);
         setLoading($form);
         
@@ -208,9 +211,8 @@ jQuery(document).ready(function($) {
             
             if (response.success) {
                 if ($modal.is(':visible')) {
-                    closeModal();
+                    closeModal();                    
                 }
-                location.reload();
             } else {
                 showMessage(response.data.message, 'error');
             }
