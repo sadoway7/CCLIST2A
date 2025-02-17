@@ -229,6 +229,7 @@ jQuery(document).ready(function($) {
         reader.onload = function(e) {
             try {
                 const data = JSON.parse(e.target.result);
+                console.log("data to be imported", data);
                 
                 $.post(cclistAdmin.ajaxUrl, {
                     action: 'cclist_import_products',

@@ -248,7 +248,9 @@ function cclist_ajax_import_products() {
         wp_send_json_error(array('message' => 'Unauthorized access'));
     }
     
+    error_log("cclist_ajax_import_products: raw POST data: " . print_r($_POST, true));
     $json_data = stripslashes($_POST['data']);
+    error_log("cclist_ajax_import_products: json_data after stripslashes: " . $json_data);
     $result = cclist_import_products($json_data);
     
     if (is_wp_error($result)) {
