@@ -251,6 +251,7 @@ function cclist_get_categories() {
  */
 function cclist_import_products($json_data) {
     $products = json_decode($json_data, true);
+    error_log("import products json" . print_r($products, true));
     error_log("cclist_import_products: decoded JSON data: " . print_r($products,true));
     if (json_last_error() !== JSON_ERROR_NONE) {
         return new WP_Error('invalid_json', 'Invalid JSON data provided');
@@ -258,6 +259,10 @@ function cclist_import_products($json_data) {
 
     $success_count = 0;
     foreach ($products as $product) {
+      if(empty($product['category']) && empty($product['item'])){
+        error_log("skipping empty looking product");
+        continue;
+      }
         if (cclist_save_product($product)) {
             $success_count++;
         }
