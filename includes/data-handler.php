@@ -143,59 +143,85 @@ function cclist_save_product($data) {
     global $wpdb;
     $table = $wpdb->prefix . 'cclist_products';
 
-    $category = sanitize_text_field($data['category']);
-    $item_name = sanitize_text_field($data['item']);
-    $variations = $data['variations'];
     error_log("cclist_save_product called. Data: " . print_r($data, true));
 
-    // For edits, delete existing variations for the item
-    if (isset($data['item_name'])) {
-      $deleted = $wpdb->delete(
-          $table,
-          array('item' => $data['item_name']),
-          array('%s')
-      );
-      error_log("Deleting variations for item: " . $data['item_name'] . ". Result: " . $deleted);
-    }
+    // Check if this is an import or a form submission
+    if (isset($data['variations'])) {
+        // Form submission: process variations array
+        $category = sanitize_text_field($data['category']);
+        $item_name = sanitize_text_field($data['item']);
+        $variations = $data['variations'];
 
-    if (!is_array($variations) || empty($variations)) {
-        error_log("Error: Variations data is not an array or is empty.");
-        return false; // Or throw an exception, or return a WP_Error
-    }
-
-    // Insert variations
-    foreach ($variations as $variation) {
-        // Skip variations if price is empty
-        if(empty($variation['price'])){
-          error_log("Skipping variation due to empty price: " . print_r($variation,true));
-          continue;
+        // For edits, delete existing variations for the item
+        if (isset($data['item_name'])) {
+            $deleted = $wpdb->delete(
+                $table,
+                array('item' => $data['item_name']),
+                array('%s')
+            );
+            error_log("Deleting variations for item: " . $data['item_name'] . ". Result: " . $deleted);
         }
+
+        if (!is_array($variations) || empty($variations)) {
+            error_log("Error: Variations data is not an array or is empty.");
+            return false;
+        }
+
+        foreach ($variations as $variation) {
+            if (empty($variation['price'])) {
+                error_log("Skipping variation due to empty price: " . print_r($variation, true));
+                continue;
+            }
+            $fields = array(
+                'category' => $category,
+                'item' => $item_name,
+                'size' => !empty($variation['size']) ? sanitize_text_field($variation['size']) : null,
+                'price' => floatval($variation['price']),
+                'quantity_min' => isset($variation['quantity_min']) ? intval($variation['quantity_min']) : 1,
+                'quantity_max' => !empty($variation['quantity_max']) ? intval($variation['quantity_max']) : null,
+                'discount' => !empty($variation['discount']) ? floatval($variation['discount']) : null
+            );
+
+            error_log("Inserting variation: " . print_r($fields, true));
+            $inserted = $wpdb->insert(
+                $table,
+                $fields,
+                array('%s', '%s', '%s', '%f', '%d', '%d', '%f')
+            );
+            if ($inserted === false) {
+                error_log("WPDB Error:" . $wpdb->last_error);
+            } else {
+                error_log("Variation inserted successfully. Insert ID: " . $wpdb->insert_id);
+            }
+        }
+    } else {
+        // Import: process individual product data
         $fields = array(
-            'category' => $category,
-            'item' => $item_name,
-            'size' => !empty($variation['size']) ? sanitize_text_field($variation['size']) : null,
-            'price' => floatval($variation['price']),
-            'quantity_min' => isset($variation['quantity_min']) ? intval($variation['quantity_min']) : 1,
-            'quantity_max' => !empty($variation['quantity_max']) ? intval($variation['quantity_max']) : null,
-            'discount' => !empty($variation['discount']) ? floatval($variation['discount']) : null
+            'category' => sanitize_text_field($data['category']),
+            'item' => sanitize_text_field($data['item']),
+            'size' => !empty($data['size']) ? sanitize_text_field($data['size']) : null,
+            'price' => floatval($data['price']),
+            'quantity_min' => isset($data['quantity_min']) ? intval($data['quantity_min']) : 1,
+            'quantity_max' => !empty($data['quantity_max']) ? intval($data['quantity_max']) : null,
+            'discount' => !empty($data['discount']) ? floatval($data['discount']) : null
         );
 
-        error_log("Inserting variation: " . print_r($fields, true));
-      $inserted =  $wpdb->insert(
+        error_log("Inserting imported product: " . print_r($fields, true));
+        $inserted = $wpdb->insert(
             $table,
             $fields,
             array('%s', '%s', '%s', '%f', '%d', '%d', '%f')
         );
-      if($inserted === false){
-        error_log("WPDB Error:" . $wpdb->last_error);
-      } else {
-        error_log("Variation inserted successfully. Insert ID: " . $wpdb->insert_id);
-      }
+        if ($inserted === false) {
+            error_log("WPDB Error:" . $wpdb->last_error);
+        }
+         else {
+            error_log("Imported Product inserted successfully. Insert ID: " . $wpdb->insert_id);
+        }
     }
 
     return true;
 }
-
 /**
  * Delete a product
  */
