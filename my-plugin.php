@@ -1,13 +1,12 @@
 <?php
 /**
  * Plugin Name: CCList Admin
- * Description: A product management app for a simple catalog list.
+ * Description: A product management application for displaying and managing products in a simple catalog list format.
  * Version: 0.0.4
  * Author: James Sadoway
  * GitHub Plugin URI: sadoway7/CCLIST2A.git
  * GitHub Plugin URI: https://github.com/sadoway7/CCLIST2A.git
- */
- */
+ /
 
 // Exit if accessed directly
 if (!defined('ABSPATH')) {
@@ -15,7 +14,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('CCLIST_VERSION', '0.0.1');
+define('CCLIST_VERSION', '0.0.4');
 define('CCLIST_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CCLIST_PLUGIN_URL', plugin_dir_url(__FILE__));
 
