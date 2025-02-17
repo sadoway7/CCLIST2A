@@ -1,7 +1,7 @@
 <?php
 /**
  * GitHub Plugin URI: https://github.com/sadoway7/CCLIST2A.git
- * Version: 1.1.9
+ * Version: 1.1.10
  * Plugin Name: CCList Admin
  * Description: A product management application for displaying and managing products in a simple catalog list format.
  * Author: James Sadoway
@@ -137,6 +137,8 @@ function cclist_ajax_save_product() {
       'item' => sanitize_text_field($_POST['item']),
       'variations' => $_POST['variations']
     );
+
+    error_log("Received data in my-plugin.php: " . print_r($data,true));
 
     // Check if this is an edit operation (if an old item name is supplied)
     if (isset($_POST['item_name'])) {
