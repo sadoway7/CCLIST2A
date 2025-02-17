@@ -231,7 +231,6 @@ jQuery(document).ready(function($) {
             try {
                 const data = JSON.parse(e.target.result);
                 console.log("data to be imported", data);
-                
                 $.post(cclistAdmin.ajaxUrl, {
                     action: 'cclist_import_products',
                     data: JSON.stringify(data),
@@ -249,5 +248,43 @@ jQuery(document).ready(function($) {
             }
         };
         reader.readAsText(file);
+    });
+
+    // Empty Products Table
+    $('#empty-products').on('click', function() {
+        if (!confirm('Are you sure you want to empty the products table? This cannot be undone.')) {
+            return;
+        }
+
+        $.post(cclistAdmin.ajaxUrl, {
+            action: 'cclist_empty_products_table',
+            nonce: cclistAdmin.nonce
+        }, function(response) {
+            if (response.success) {
+                showMessage('Products table emptied successfully.');
+                location.reload(); // Refresh the page
+            } else {
+                showMessage('Error emptying products table.', 'error');
+            }
+        });
+    });
+
+      // Empty Categories Table
+      $('#empty-categories').on('click', function() {
+        if (!confirm('Are you sure you want to empty the categories table? This cannot be undone.')) {
+            return;
+        }
+
+        $.post(cclistAdmin.ajaxUrl, {
+            action: 'cclist_empty_categories_table',
+            nonce: cclistAdmin.nonce
+        }, function(response) {
+            if (response.success) {
+                showMessage('Categories table emptied successfully.');
+                location.reload(); // Refresh the page
+            } else {
+                showMessage('Error emptying categories table.', 'error');
+            }
+        });
     });
 });

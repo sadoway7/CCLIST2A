@@ -1,10 +1,11 @@
 <?php
 /**
- * GitHub Plugin URI: https://github.com/sadoway7/CCLIST2A.git
- * Version: 1.1.10
  * Plugin Name: CCList Admin
  * Description: A product management application for displaying and managing products in a simple catalog list format.
+ * Version: 0.0.4
  * Author: James Sadoway
+ * GitHub Plugin URI: sadoway7/CCLIST2A.git
+ * GitHub Plugin URI: https://github.com/sadoway7/CCLIST2A.git
  */
 
 // Exit if accessed directly
@@ -146,8 +147,6 @@ function cclist_ajax_save_product() {
       'variations' => $_POST['variations']
     );
 
-    error_log("Received data in my-plugin.php: " . print_r($data,true));
-
     // Check if this is an edit operation (if an old item name is supplied)
     if (isset($_POST['item_name'])) {
       $data['item_name'] = sanitize_text_field($_POST['item_name']);
@@ -165,14 +164,14 @@ add_action('wp_ajax_cclist_save_product', 'cclist_ajax_save_product');
 
 function cclist_ajax_delete_product() {
     check_ajax_referer('cclist_admin_nonce', 'nonce');
-    
+
     if (!current_user_can('manage_options')) {
         wp_send_json_error(array('message' => 'Unauthorized access'));
     }
-    
+
     $product_id = intval($_POST['id']);
     $result = cclist_delete_product($product_id);
-    
+
     if ($result) {
         wp_send_json_success(array('message' => 'Product deleted successfully'));
     } else {
@@ -183,21 +182,21 @@ add_action('wp_ajax_cclist_delete_product', 'cclist_ajax_delete_product');
 
 function cclist_ajax_delete_group() {
     check_ajax_referer('cclist_admin_nonce', 'nonce');
-    
+
     if (!current_user_can('manage_options')) {
         wp_send_json_error(array('message' => 'Unauthorized access'));
     }
-    
+
     global $wpdb;
     $table = $wpdb->prefix . 'cclist_products';
     $item = sanitize_text_field($_POST['item']);
-    
+
     $result = $wpdb->delete(
         $table,
         array('item' => $item),
         array('%s')
     );
-    
+
     if ($result !== false) {
         wp_send_json_success(array('message' => 'Product group deleted successfully'));
     } else {
@@ -229,39 +228,38 @@ add_action('wp_ajax_cclist_duplicate_group', 'cclist_ajax_duplicate_group');
 
 function cclist_ajax_get_product_form() {
     check_ajax_referer('cclist_admin_nonce', 'nonce');
-    
+
     if (!current_user_can('manage_options')) {
         wp_send_json_error(array('message' => 'Unauthorized access'));
     }
-    
+
     $product_id = intval($_GET['id']);
     $product = cclist_get_product($product_id);
-    
+
     if (!$product) {
         wp_send_json_error(array('message' => 'Product not found'));
     }
-    
+
     ob_start();
     include(CCLIST_PLUGIN_DIR . 'admin/components/forms/product-form.php');
     $form = ob_get_clean();
-    
+
     wp_send_json_success(array('form' => $form));
 }
 add_action('wp_ajax_cclist_get_product_form', 'cclist_ajax_get_product_form');
 
 function cclist_ajax_import_products() {
     check_ajax_referer('cclist_admin_nonce', 'nonce');
-    
+
     if (!current_user_can('manage_options')) {
         wp_send_json_error(array('message' => 'Unauthorized access'));
     }
-    
     error_log("cclist_ajax_import_products: Function called");
     error_log("cclist_ajax_import_products: raw POST data: " . print_r($_POST, true));
     $json_data = stripslashes($_POST['data']);
     error_log("cclist_ajax_import_products: json_data after stripslashes: " . $json_data);
     $result = cclist_import_products($json_data);
-    
+
     if (is_wp_error($result)) {
         wp_send_json_error(array('message' => $result->get_error_message()));
     } else {
@@ -283,4 +281,38 @@ add_action('rest_api_init', 'cclist_register_rest_routes');
 // REST API callback
 function cclist_get_products_api() {
     return cclist_get_products_for_api();
+}
+
+// Ajax handler to empty the products table
+add_action('wp_ajax_cclist_empty_products_table', 'cclist_ajax_empty_products_table');
+function cclist_ajax_empty_products_table() {
+  check_ajax_referer('cclist_admin_nonce', 'nonce');
+
+  if (!current_user_can('manage_options')) {
+      wp_send_json_error(array('message' => 'Unauthorized access'));
+  }
+
+  $result = cclist_empty_products_table();
+
+  if ($result) {
+    wp_send_json_success();
+  }
+  else{
+    wp_send_json_error(array('message' => 'Could not empty table'));
+  }
+}
+
+add_action('wp_ajax_cclist_empty_categories_table', 'cclist_ajax_empty_categories_table');
+function cclist_ajax_empty_categories_table() {
+  check_ajax_referer('cclist_admin_nonce', 'nonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(array('message' => 'Unauthorized access'));
+    }
+  $result = cclist_empty_categories_table();
+    if ($result) {
+    wp_send_json_success();
+  }
+  else{
+    wp_send_json_error(array('message' => 'Could not empty table'));
+  }
 }

@@ -223,6 +223,26 @@ function cclist_save_product($data) {
     return true;
 }
 /**
+ * Empty the products table.
+ */
+function cclist_empty_products_table() {
+    global $wpdb;
+    $table_products = $wpdb->prefix . 'cclist_products';
+    return $wpdb->query("TRUNCATE TABLE $table_products");
+}
+
+/**
+ * Empty the categories table
+ */
+
+ function cclist_empty_categories_table(){
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'cclist_categories';
+    return $wpdb->query("TRUNCATE TABLE $table_name");
+ }
+
+
+/**
  * Delete a product
  */
 function cclist_delete_product($id) {

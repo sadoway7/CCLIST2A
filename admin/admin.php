@@ -13,6 +13,9 @@ $categories = cclist_get_categories();
     
     <input type="file" id="import-products" accept=".json" style="display: none;">
     <label for="import-products" class="button button-secondary">Import Products</label>
+    <button type="button" class="button button-secondary" id="empty-products">Empty Products Table</button>
+    <button type="button" class="button button-secondary" id="empty-categories">Empty Categories Table</button>
+
 
 
     <div class="cclist-filters">
