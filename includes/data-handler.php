@@ -265,7 +265,7 @@ function add_category_if_not_exists($category){
 function cclist_import_products($json_data) {
     error_log("cclist_import_products: Received JSON data: " . $json_data);
     $products = json_decode($json_data, true);
-
+    error_log("cclist_import_products: decoded JSON data: " . print_r($products,true));
 
     if (json_last_error() !== JSON_ERROR_NONE) {
         error_log("cclist_import_products: JSON decode error: " . json_last_error_msg());
@@ -274,6 +274,7 @@ function cclist_import_products($json_data) {
 
     if (!is_array($products)) {
         error_log("cclist_import_products: Decoded data is not an array.");
+        return false;
     }
 
     // Add categories if they don't already exist.
@@ -284,24 +285,21 @@ function cclist_import_products($json_data) {
     }
 
    $success_count = 0;
-
-    if(isset($products['products'])){
-        foreach ($products['products'] as $product) {
-            add_category_if_not_exists($product['category']);
-            if(empty($product['category']) && empty($product['item'])){
-            error_log("skipping empty looking product");
-            continue;
-            }
-            if (cclist_save_product($product)) {
-                $success_count++;
-            }
-        }
-    }
+   foreach ($products as $product) {
+      add_category_if_not_exists($product['category']);
+       if(empty($product['category']) && empty($product['item'])){
+         error_log("skipping empty looking product");
+         continue;
+       }
+       if (cclist_save_product($product)) {
+           $success_count++;
+       }
+   }
 
    return array(
        'success' => true,
        'imported' => $success_count,
-       'total' => isset($products['products']) ? count($products['products']) : 0
+       'total' => count($products)
    );
 }
 
