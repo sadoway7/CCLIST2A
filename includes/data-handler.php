@@ -276,24 +276,18 @@ function cclist_import_products($json_data) {
         return false;
     }
 
-    // Add categories if they don't already exist.
-    if(isset($products['available_categories']) && is_array($products['available_categories'])){
-      foreach($products['available_categories'] as $category){
-        add_category_if_not_exists($category);
-      }
-    }
 
    $success_count = 0;
    foreach ($products as $product) {
-      add_category_if_not_exists($product['category']);
-       if(empty($product['category']) && empty($product['item'])){
-         error_log("skipping empty looking product");
-         continue;
-       }
-       if (cclist_save_product($product)) {
-           $success_count++;
-       }
-   }
+        add_category_if_not_exists($product['category']);
+        if(empty($product['category']) || empty($product['item']) || empty($product['price'])){
+          error_log("skipping empty looking product");
+          continue;
+        }
+        if (cclist_save_product($product)) {
+            $success_count++;
+        }
+    }
 
    return array(
        'success' => true,
@@ -364,8 +358,6 @@ function cclist_empty_products_table() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'cclist2a_categories';  // Changed prefix
     return $wpdb->query("TRUNCATE TABLE $table_name");
-<<<<<<< HEAD
-<<<<<<< HEAD
  }
 
 /**
@@ -405,10 +397,8 @@ function cclist_import_csv($csv_data) {
 
         // Combine the header and row to create an associative array
         if (count($header) !== count($row)) {
-            error_log("cclist_import_csv: Mismatch between header and row length. Padding row with empty values.");
-            while (count($row) < count($header)) {
-                $row[] = ''; // Pad with empty values
-            }
+            error_log("cclist_import_csv: Mismatch between header and row length. Skipping row.");
+            continue; // Skip rows that don't match the header length
         }
         $product_data = array_combine($header, $row);
          if ($product_data === false) {
@@ -421,11 +411,17 @@ function cclist_import_csv($csv_data) {
             $product_data['discount'] = null; // Default to null
         }
 
+      // Skip variations if any required fields are empty
+      if(empty($product_data['category']) || empty($product_data['item']) || empty($product_data['price'])){
+          error_log("Skipping product due to empty required fields: " . print_r($product_data,true));
+          continue;
+        }
+
       // Make sure price is correctly cast
       if(isset($product_data['price'])){
         $product_data['price'] = (float) $product_data['price'];
       }
-
+        error_log("adding product" . print_r($product_data, true));
         $products[] = $product_data; // Add to the products array
     }
 
@@ -447,9 +443,3 @@ function cclist_import_csv($csv_data) {
         'total' => count($products)
     );
 }
-=======
- }
->>>>>>> parent of 6e34678 (55)
-=======
- }
->>>>>>> parent of 6e34678 (55)
