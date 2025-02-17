@@ -211,8 +211,9 @@ jQuery(document).ready(function($) {
             
             if (response.success) {
                 if ($modal.is(':visible')) {
-                    closeModal();                    
+                    closeModal();
                 }
+                location.reload();
             } else {
                 showMessage(response.data.message, 'error');
             }

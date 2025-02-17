@@ -162,16 +162,22 @@ jQuery(document).ready(function($) {
             }
             $('#category').append($('<option>', {
                 value: newCategory,
-                text: newCategory
-            })).val(newCategory);
+                text: newCategory,
+                selected: true
+            }));
         }
 
         const formData = $(this).serializeArray();
         console.log('Form Data:', formData);
+
         $.post(ajaxurl, formData, function(response) {
-          if(response.success){
-            window.location.href = "<?php echo admin_url('admin.php?page=cclist-admin');?>"
-          } else {
+            if (response.success) {
+                // Reload the page to show the new product
+                location.reload();
+            } else if (response.data && response.data.message) {
+                alert(response.data.message);
+            } else {
+                // Fallback error message
             alert('Error saving product');
           }
         })

@@ -1,7 +1,7 @@
 <?php
 /**
  * GitHub Plugin URI: https://github.com/sadoway7/CCLIST2A.git
- * Version: 1.0.8
+ * Version: 1.1.8
  * Plugin Name: CCList Admin
  * Description: A product management application for displaying and managing products in a simple catalog list format.
  * Author: James Sadoway
