@@ -221,6 +221,36 @@ jQuery(document).ready(function($) {
         });
     });
 
+   // Import Products
+     $('#import-products').on('click', function(e) {
+       //CSV Import
+        e.preventDefault(); // Prevent default button behavior
+        const jsonData = $('#import-json').val();
+
+        if (!jsonData) {
+            showMessage('Please paste JSON data into the textarea.', 'error');
+            return;
+        }
+        try {
+            const data = JSON.parse(jsonData);
+            console.log("data to be imported", data);
+            $.post(cclistAdmin.ajaxUrl, {
+                action: 'cclist_import_products',
+                data: JSON.stringify(data), // Send stringified JSON
+                nonce: cclistAdmin.nonce
+            }, function(response) {
+                if (response.success) {
+                    showMessage(`Successfully imported ${response.data.imported} products`);
+                    location.reload();
+                } else {
+                      console.log(response);
+                        showMessage(response.data.message, 'error');
+                    }
+            });
+        } catch (error) {
+            showMessage('Invalid JSON file', 'error');
+        }
+    });
     // Empty Products Table
     $('#empty-products').on('click', function() {
         if (!confirm('Are you sure you want to empty the products table? This cannot be undone.')) {
