@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Get grouped products
-$grouped_products = cclist_get_products_grouped();
+$grouped_products = cclist_get_products_grouped(); // Ensure we fetch fresh data
 $categories = cclist_get_categories();
 
 ?><div class="wrap cclist-admin">

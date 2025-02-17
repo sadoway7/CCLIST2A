@@ -30,6 +30,14 @@ function cclist_activate() {
     global $wpdb;
     $charset_collate = $wpdb->get_charset_collate();
 
+    $table_categories = $wpdb->prefix . 'cclist_categories';
+    $sql_categories = "CREATE TABLE IF NOT EXISTS $table_categories (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        category_name varchar(100) NOT NULL,
+        PRIMARY KEY  (id)
+    ) $charset_collate;";
+    dbDelta($sql_categories);
+
     // Create products table
     $table_products = $wpdb->prefix . 'cclist_products';
     $sql_products = "CREATE TABLE IF NOT EXISTS $table_products (
