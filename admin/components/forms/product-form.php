@@ -5,10 +5,20 @@ if (!defined('ABSPATH')) {
 
 $product = null;
 $is_edit = false;
+$variations = array();
 
 if (isset($_GET['id'])) {
     $product = cclist_get_product(intval($_GET['id']));
     $is_edit = true;
+    // If editing, fetch all variations for this item
+    if ($product) {
+        global $wpdb;
+        $table_products = $wpdb->prefix . 'cclist_products';
+        $variations = $wpdb->get_results(
+            $wpdb->prepare("SELECT * FROM $table_products WHERE item = %s ORDER BY size ASC, quantity_min ASC", $product['item']),
+            ARRAY_A
+        );
+    }
 }
 
 $categories = cclist_get_categories();
@@ -21,7 +31,7 @@ $categories = cclist_get_categories();
         <?php wp_nonce_field('cclist_product_nonce'); ?>
         <input type="hidden" name="action" value="cclist_save_product">
         <?php if ($is_edit): ?>
-            <input type="hidden" name="id" value="<?php echo esc_attr($product['id']); ?>">
+            <input type="hidden" name="item_name" value="<?php echo esc_attr($product['item']); ?>">
         <?php endif; ?>
 
         <table class="form-table">
@@ -56,65 +66,44 @@ $categories = cclist_get_categories();
                            value="<?php echo esc_attr($product ? $product['item'] : ''); ?>" required>
                 </td>
             </tr>
+        </table>
+        
+        <h2>Variations</h2>
+        <p>Add one or more variations for this product. Each variation can have a different size, price, and quantity range.</p>
+
+        <table class="widefat fixed striped table-view-list" id="variations-table">
+          <thead>
             <tr>
-                <th scope="row">
-                    <label for="variation_type">Variation Type</label>
-                </th>
-                <td>
-                    <select name="variation_type" id="variation_type">
-                        <option value="quantity">Quantity-based Price Breaks</option>
-                        <option value="size">Size Variations</option>
-                    </select>
-                </td>
+              <th>Size</th>
+              <th>Price</th>
+              <th>Quantity Min</th>
+              <th>Quantity Max</th>
+              <th>Discount</th>
+              <th>Actions</th>
             </tr>
-            <tr class="size-field">
-                <th scope="row">
-                    <label for="size">Size/Weight</label>
-                </th>
-                <td>
-                    <input type="text" name="size" id="size" class="regular-text"
-                           value="<?php echo esc_attr($product ? $product['size'] : ''); ?>">
-                    <p class="description">Example: "20kg", "500g", "2.5kg", etc.</p>
-                </td>
-            </tr>
+          </thead>
+          <tbody>
+            <?php if (!empty($variations)) :
+                foreach ($variations as $index => $variation) : ?>
+                <tr class="variation-row">
+                    <input type="hidden" name="variations[<?php echo $index; ?>][id]" value="<?php echo esc_attr($variation['id']); ?>">
+                    <td><input type="text" name="variations[<?php echo $index; ?>][size]" value="<?php echo esc_attr($variation['size']); ?>" placeholder="Size"></td>
+                    <td><input type="number" step="0.01" name="variations[<?php echo $index; ?>][price]" value="<?php echo esc_attr($variation['price']); ?>" placeholder="Price"></td>
+                    <td><input type="number" name="variations[<?php echo $index; ?>][quantity_min]" value="<?php echo esc_attr($variation['quantity_min']); ?>" placeholder="Min Quantity"></td>
+                    <td><input type="number" name="variations[<?php echo $index; ?>][quantity_max]" value="<?php echo esc_attr($variation['quantity_max']); ?>" placeholder="Max Quantity"></td>
+                    <td><input type="number" step="0.01" name="variations[<?php echo $index; ?>][discount]" value="<?php echo esc_attr($variation['discount']); ?>" placeholder="Discount"></td>
+                    <td><button type="button" class="button remove-variation">Remove</button></td>
+                </tr>
+            <?php endforeach;
+            endif; ?>
+          </tbody>
+          <tfoot>
             <tr>
-                <th scope="row">
-                    <label for="price">Price</label>
-                </th>
-                <td>
-                    <input type="number" name="price" id="price" class="regular-text" step="0.01" min="0"
-                           value="<?php echo esc_attr($product ? $product['price'] : ''); ?>" required>
-                </td>
+              <td colspan="6">
+                <button type="button" class="button" id="add-variation">Add Variation</button>
+              </td>
             </tr>
-            <tr class="quantity-fields">
-                <th scope="row">
-                    <label for="quantity_min">Minimum Quantity</label>
-                </th>
-                <td>
-                    <input type="number" name="quantity_min" id="quantity_min" class="regular-text" min="1"
-                           value="<?php echo esc_attr($product ? $product['quantity_min'] : '1'); ?>">
-                </td>
-            </tr>
-            <tr class="quantity-fields">
-                <th scope="row">
-                    <label for="quantity_max">Maximum Quantity</label>
-                </th>
-                <td>
-                    <input type="number" name="quantity_max" id="quantity_max" class="regular-text" min="1"
-                           value="<?php echo esc_attr($product ? $product['quantity_max'] : ''); ?>">
-                    <p class="description">Leave empty for no upper limit</p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="discount">Discount</label>
-                </th>
-                <td>
-                    <input type="number" name="discount" id="discount" class="regular-text" step="0.01" min="0" max="1"
-                           value="<?php echo esc_attr($product ? $product['discount'] : ''); ?>">
-                    <p class="description">Enter as decimal (e.g., 0.2 for 20% discount)</p>
-                </td>
-            </tr>
+          </tfoot>
         </table>
 
         <p class="submit">
@@ -137,16 +126,28 @@ jQuery(document).ready(function($) {
         }
     });
 
-    // Handle variation type changes
-    $('#variation_type').on('change', function() {
-        if ($(this).val() === 'size') {
-            $('.quantity-fields').hide();
-            $('.size-field').show();
-        } else {
-            $('.quantity-fields').show();
-            $('.size-field').show();
-        }
-    }).trigger('change');
+    // Add variation row
+    $('#add-variation').on('click', function() {
+        const index = $('#variations-table tbody tr').length;
+        const row = `
+            <tr class="variation-row">
+                <input type="hidden" name="variations[${index}][id]" value="">
+                <td><input type="text" name="variations[${index}][size]" placeholder="Size"></td>
+                <td><input type="number" step="0.01" name="variations[${index}][price]" placeholder="Price"></td>
+                <td><input type="number" name="variations[${index}][quantity_min]" placeholder="Min Quantity"></td>
+                <td><input type="number" name="variations[${index}][quantity_max]" placeholder="Max Quantity"></td>
+                <td><input type="number" step="0.01" name="variations[${index}][discount]" placeholder="Discount"></td>
+
+                <td><button type="button" class="button remove-variation">Remove</button></td>
+            </tr>
+        `;
+        $('#variations-table tbody').append(row);
+    });
+
+    // Remove variation row
+    $(document).on('click', '.remove-variation', function() {
+        $(this).closest('tr').remove();
+    });
 
     // Form submission
     $('#product-form').on('submit', function(e) {
@@ -165,15 +166,14 @@ jQuery(document).ready(function($) {
             })).val(newCategory);
         }
 
-        const formData = $(this).serialize();
-        
+        const formData = $(this).serializeArray();
         $.post(ajaxurl, formData, function(response) {
-            if (response.success) {
-                window.location.href = '<?php echo admin_url('admin.php?page=cclist-admin'); ?>';
-            } else {
-                alert(response.data.message || 'Error saving product');
-            }
-        });
+          if(response.success){
+            window.location.href = "<?php echo admin_url('admin.php?page=cclist-admin');?>"
+          } else {
+            alert('Error saving product');
+          }
+        })
     });
 });
 </script>

@@ -2,11 +2,8 @@
 /**
  * Plugin Name: CCList Admin
  * Description: A product management app for a simple catalog list.
- * Version: 0.0.1
+ * Version: 0.0.2
  * Author: James Sadoway
- * GitHub Plugin URI: sadoway7/CCLIST2A.git
- * GitHub Plugin URI: https://github.com/sadoway7/CCLIST2A.git
- */
  */
 
 // Exit if accessed directly
@@ -129,27 +126,24 @@ function cclist_admin_new_product() {
 // Ajax handlers
 function cclist_ajax_save_product() {
     check_ajax_referer('cclist_admin_nonce', 'nonce');
-    
+
     if (!current_user_can('manage_options')) {
         wp_send_json_error(array('message' => 'Unauthorized access'));
     }
-    
-    $product_data = array(
-        'category' => sanitize_text_field($_POST['category']),
-        'item' => sanitize_text_field($_POST['item']),
-        'size' => !empty($_POST['size']) ? sanitize_text_field($_POST['size']) : null,
-        'price' => floatval($_POST['price']),
-        'quantity_min' => isset($_POST['quantity_min']) ? intval($_POST['quantity_min']) : 1,
-        'quantity_max' => !empty($_POST['quantity_max']) ? intval($_POST['quantity_max']) : null,
-        'discount' => !empty($_POST['discount']) ? floatval($_POST['discount']) : null
+
+    $data = array(
+      'category' => sanitize_text_field($_POST['category']),
+      'item' => sanitize_text_field($_POST['item']),
+      'variations' => $_POST['variations']
     );
-    
-    if (!empty($_POST['id'])) {
-        $product_data['id'] = intval($_POST['id']);
+
+    // Check if this is an edit operation (if an old item name is supplied)
+    if (isset($_POST['item_name'])) {
+      $data['item_name'] = sanitize_text_field($_POST['item_name']);
     }
-    
-    $result = cclist_save_product($product_data);
-    
+
+    $result = cclist_save_product($data);
+
     if ($result) {
         wp_send_json_success(array('message' => 'Product saved successfully'));
     } else {

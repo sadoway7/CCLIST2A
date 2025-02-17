@@ -142,36 +142,41 @@ function cclist_get_product($id) {
 function cclist_save_product($data) {
     global $wpdb;
     $table = $wpdb->prefix . 'cclist_products';
-    
-    $fields = array(
-        'category' => sanitize_text_field($data['category']),
-        'item' => sanitize_text_field($data['item']),
-        'size' => !empty($data['size']) ? sanitize_text_field($data['size']) : null,
-        'price' => floatval($data['price']),
-        'quantity_min' => isset($data['quantity_min']) ? intval($data['quantity_min']) : 1,
-        'quantity_max' => !empty($data['quantity_max']) ? intval($data['quantity_max']) : null,
-        'discount' => !empty($data['discount']) ? floatval($data['discount']) : null
-    );
-    
-    if (!empty($data['id'])) {
-        // Update existing product
-        $wpdb->update(
+
+    $category = sanitize_text_field($data['category']);
+    $item_name = sanitize_text_field($data['item']);
+    $variations = $data['variations'];
+
+    // For edits, delete existing variations for the item
+    if (isset($data['item_name'])) {
+        $wpdb->delete(
             $table,
-            $fields,
-            array('id' => intval($data['id'])),
-            array('%s', '%s', '%s', '%f', '%d', '%d', '%f'),
-            array('%d')
+            array('item' => $data['item_name']),
+            array('%s')
         );
-        return intval($data['id']);
-    } else {
-        // Insert new product
+        $item_name = sanitize_text_field($data['item_name']);
+    }
+    // Insert variations
+    foreach ($variations as $variation) {
+
+        $fields = array(
+            'category' => $category,
+            'item' => $item_name,
+            'size' => !empty($variation['size']) ? sanitize_text_field($variation['size']) : null,
+            'price' => floatval($variation['price']),
+            'quantity_min' => isset($variation['quantity_min']) ? intval($variation['quantity_min']) : 1,
+            'quantity_max' => !empty($variation['quantity_max']) ? intval($variation['quantity_max']) : null,
+            'discount' => !empty($variation['discount']) ? floatval($variation['discount']) : null
+        );
+
         $wpdb->insert(
             $table,
             $fields,
             array('%s', '%s', '%s', '%f', '%d', '%d', '%f')
         );
-        return $wpdb->insert_id;
     }
+
+    return true;
 }
 
 /**
