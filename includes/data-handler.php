@@ -365,6 +365,7 @@ function cclist_empty_products_table() {
     $table_name = $wpdb->prefix . 'cclist2a_categories';  // Changed prefix
     return $wpdb->query("TRUNCATE TABLE $table_name");
 <<<<<<< HEAD
+<<<<<<< HEAD
  }
 
 /**
@@ -446,6 +447,9 @@ function cclist_import_csv($csv_data) {
         'total' => count($products)
     );
 }
+=======
+ }
+>>>>>>> parent of 6e34678 (55)
 =======
  }
 >>>>>>> parent of 6e34678 (55)

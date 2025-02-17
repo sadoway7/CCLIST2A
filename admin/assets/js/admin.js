@@ -316,6 +316,9 @@ jQuery(document).ready(function($) {
                 showMessage('Error emptying categories table.', 'error');
             }
         });
+<<<<<<< HEAD
+>>>>>>> parent of 6e34678 (55)
+=======
 >>>>>>> parent of 6e34678 (55)
     });
 });
