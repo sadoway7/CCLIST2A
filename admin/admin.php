@@ -16,7 +16,7 @@ $categories = cclist_get_categories();
     <button type="button" class="button button-secondary" id="import-products">Import Products</button>
     <input type="file" id="import-csv" accept=".csv" style="display: none;">
     <label for="import-csv" class="button button-secondary">Import CSV</label>
-
+    <button type="button" class="button button-secondary" id="empty-products">Clear Table</button>
 
     <div class="cclist-filters">
         <select id="category-filter">

@@ -397,8 +397,9 @@ function cclist_import_csv($csv_data) {
 
         // Combine the header and row to create an associative array
         if (count($header) !== count($row)) {
-            error_log("cclist_import_csv: Mismatch between header and row length. Skipping row.");
-            continue; // Skip rows that don't match the header length
+            error_log("cclist_import_csv: Mismatch between header and row length. Padding row with null values.");
+            // Pad the row array with null values to match the header length
+            $row = array_pad($row, count($header), null);
         }
         $product_data = array_combine($header, $row);
          if ($product_data === false) {
@@ -412,10 +413,6 @@ function cclist_import_csv($csv_data) {
         }
 
       // Skip variations if any required fields are empty
-      if(empty($product_data['category']) || empty($product_data['item']) || empty($product_data['price'])){
-          error_log("Skipping product due to empty required fields: " . print_r($product_data,true));
-          continue;
-        }
 
       // Make sure price is correctly cast
       if(isset($product_data['price'])){
