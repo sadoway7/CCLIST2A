@@ -167,6 +167,7 @@ jQuery(document).ready(function($) {
         }
 
         const formData = $(this).serializeArray();
+        console.log('Form Data:', formData);
         $.post(ajaxurl, formData, function(response) {
           if(response.success){
             window.location.href = "<?php echo admin_url('admin.php?page=cclist-admin');?>"

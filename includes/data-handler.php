@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 function cclist_get_products_for_api() {
     global $wpdb;
     $table = $wpdb->prefix . 'cclist_products';
-    
+
     try {
         // Get all products ordered by item name and quantity_min
         $products = $wpdb->get_results(
@@ -37,12 +37,12 @@ function cclist_get_products_for_api() {
         foreach ($grouped_products as $item_group) {
             // Check if this is a size variation product
             $has_size_variations = count(array_unique(array_column($item_group, 'size'))) > 1;
-            
+
             if ($has_size_variations) {
                 // Handle size variations (like Cobalt Carbonate)
                 $base_product = $item_group[0];
                 $prices = array();
-                
+
                 foreach ($item_group as $variation) {
                     $prices[$variation['size']] = floatval($variation['price']);
                 }
@@ -96,12 +96,12 @@ function cclist_get_products_for_api() {
 function cclist_get_products_grouped() {
     global $wpdb;
     $table = $wpdb->prefix . 'cclist_products';
-    
+
     $products = $wpdb->get_results(
         "SELECT * FROM $table ORDER BY category ASC, item ASC, quantity_min ASC",
         ARRAY_A
     );
-    
+
     if (empty($products)) {
         return array();
     }
@@ -129,7 +129,7 @@ function cclist_get_products_grouped() {
 function cclist_get_product($id) {
     global $wpdb;
     $table = $wpdb->prefix . 'cclist_products';
-    
+
     return $wpdb->get_row(
         $wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id),
         ARRAY_A
@@ -146,19 +146,24 @@ function cclist_save_product($data) {
     $category = sanitize_text_field($data['category']);
     $item_name = sanitize_text_field($data['item']);
     $variations = $data['variations'];
+    error_log("cclist_save_product called. Data: " . print_r($data, true));
 
     // For edits, delete existing variations for the item
     if (isset($data['item_name'])) {
-        $wpdb->delete(
-            $table,
-            array('item' => $data['item_name']),
-            array('%s')
-        );
-        $item_name = sanitize_text_field($data['item_name']);
+      $deleted = $wpdb->delete(
+          $table,
+          array('item' => $data['item_name']),
+          array('%s')
+      );
+      error_log("Deleting variations for item: " . $data['item_name'] . ". Result: " . $deleted);
     }
     // Insert variations
     foreach ($variations as $variation) {
-
+        // Skip variations if price is empty
+        if(empty($variation['price'])){
+          error_log("Skipping variation due to empty price: " . print_r($variation,true));
+          continue;
+        }
         $fields = array(
             'category' => $category,
             'item' => $item_name,
@@ -169,11 +174,15 @@ function cclist_save_product($data) {
             'discount' => !empty($variation['discount']) ? floatval($variation['discount']) : null
         );
 
-        $wpdb->insert(
+      $inserted =  $wpdb->insert(
             $table,
             $fields,
             array('%s', '%s', '%s', '%f', '%d', '%d', '%f')
         );
+      error_log("Inserting variation: " . print_r($fields, true) . ". Result: " . $inserted);
+      if($inserted === false){
+        error_log("WPDB Error:" . $wpdb->last_error);
+      }
     }
 
     return true;
@@ -185,7 +194,7 @@ function cclist_save_product($data) {
 function cclist_delete_product($id) {
     global $wpdb;
     $table = $wpdb->prefix . 'cclist_products';
-    
+
     return $wpdb->delete(
         $table,
         array('id' => $id),
@@ -199,7 +208,7 @@ function cclist_delete_product($id) {
 function cclist_get_categories() {
     global $wpdb;
     $table = $wpdb->prefix . 'cclist_products';
-    
+
     return $wpdb->get_col("SELECT DISTINCT category FROM $table ORDER BY category ASC");
 }
 
