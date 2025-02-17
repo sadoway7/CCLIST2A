@@ -1,0 +1,275 @@
+<?php
+/**
+ * Plugin Name: CCList Admin
+ * Description: A product management app for a simple catalog list.
+ * Version: 0.0.1
+ * Author: James Sadoway
+ */
+
+// Exit if accessed directly
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// Plugin constants
+define('CCLIST_VERSION', '0.0.1');
+define('CCLIST_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('CCLIST_PLUGIN_URL', plugin_dir_url(__FILE__));
+
+// Database version for updates
+define('CCLIST_DB_VERSION', '1.0');
+
+// Include required files
+require_once CCLIST_PLUGIN_DIR . 'includes/data-handler.php';
+
+// Activation hook
+register_activation_hook(__FILE__, 'cclist_activate');
+
+function cclist_activate() {
+    global $wpdb;
+    $charset_collate = $wpdb->get_charset_collate();
+
+    // Create products table
+    $table_products = $wpdb->prefix . 'cclist_products';
+    $sql_products = "CREATE TABLE IF NOT EXISTS $table_products (
+        id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+        category varchar(100) NOT NULL,
+        item varchar(255) NOT NULL,
+        size varchar(100) DEFAULT NULL,
+        price decimal(10,2) NOT NULL,
+        quantity_min int DEFAULT 1,
+        quantity_max int DEFAULT NULL,
+        discount decimal(4,2) DEFAULT NULL,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP,
+        updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY  (id),
+        KEY item_idx (item),
+        KEY category_idx (category)
+    ) $charset_collate;";
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql_products);
+
+    // Save database version
+    update_option('cclist_db_version', CCLIST_DB_VERSION);
+}
+
+// Admin menu
+function cclist_add_admin_menu() {
+    add_menu_page(
+        'CCList Admin',
+        'CCList Admin',
+        'manage_options',
+        'cclist-admin',
+        'cclist_admin_page',
+        'dashicons-products'
+    );
+
+    add_submenu_page(
+        'cclist-admin',
+        'Products',
+        'Products',
+        'manage_options',
+        'cclist-admin',
+        'cclist_admin_page'
+    );
+
+    add_submenu_page(
+        'cclist-admin',
+        'Add New Product',
+        'Add New',
+        'manage_options',
+        'cclist-admin-new',
+        'cclist_admin_new_product'
+    );
+}
+add_action('admin_menu', 'cclist_add_admin_menu');
+
+// Enqueue admin scripts and styles
+function cclist_admin_enqueue_scripts($hook) {
+    if (!strpos($hook, 'cclist-admin')) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'cclist-admin-styles',
+        CCLIST_PLUGIN_URL . 'admin/assets/css/admin.css',
+        array(),
+        CCLIST_VERSION
+    );
+
+    wp_enqueue_script(
+        'cclist-admin-scripts',
+        CCLIST_PLUGIN_URL . 'admin/assets/js/admin.js',
+        array('jquery'),
+        CCLIST_VERSION,
+        true
+    );
+
+    wp_localize_script('cclist-admin-scripts', 'cclistAdmin', array(
+        'ajaxUrl' => admin_url('admin-ajax.php'),
+        'adminUrl' => admin_url('admin.php'),
+        'nonce' => wp_create_nonce('cclist_admin_nonce')
+    ));
+}
+add_action('admin_enqueue_scripts', 'cclist_admin_enqueue_scripts');
+
+// Admin page callbacks
+function cclist_admin_page() {
+    include_once(CCLIST_PLUGIN_DIR . 'admin/admin.php');
+}
+
+function cclist_admin_new_product() {
+    include_once(CCLIST_PLUGIN_DIR . 'admin/components/forms/product-form.php');
+}
+
+// Ajax handlers
+function cclist_ajax_save_product() {
+    check_ajax_referer('cclist_admin_nonce', 'nonce');
+    
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(array('message' => 'Unauthorized access'));
+    }
+    
+    $product_data = array(
+        'category' => sanitize_text_field($_POST['category']),
+        'item' => sanitize_text_field($_POST['item']),
+        'size' => !empty($_POST['size']) ? sanitize_text_field($_POST['size']) : null,
+        'price' => floatval($_POST['price']),
+        'quantity_min' => isset($_POST['quantity_min']) ? intval($_POST['quantity_min']) : 1,
+        'quantity_max' => !empty($_POST['quantity_max']) ? intval($_POST['quantity_max']) : null,
+        'discount' => !empty($_POST['discount']) ? floatval($_POST['discount']) : null
+    );
+    
+    if (!empty($_POST['id'])) {
+        $product_data['id'] = intval($_POST['id']);
+    }
+    
+    $result = cclist_save_product($product_data);
+    
+    if ($result) {
+        wp_send_json_success(array('message' => 'Product saved successfully'));
+    } else {
+        wp_send_json_error(array('message' => 'Error saving product'));
+    }
+}
+add_action('wp_ajax_cclist_save_product', 'cclist_ajax_save_product');
+
+function cclist_ajax_delete_product() {
+    check_ajax_referer('cclist_admin_nonce', 'nonce');
+    
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(array('message' => 'Unauthorized access'));
+    }
+    
+    $product_id = intval($_POST['id']);
+    $result = cclist_delete_product($product_id);
+    
+    if ($result) {
+        wp_send_json_success(array('message' => 'Product deleted successfully'));
+    } else {
+        wp_send_json_error(array('message' => 'Error deleting product'));
+    }
+}
+add_action('wp_ajax_cclist_delete_product', 'cclist_ajax_delete_product');
+
+function cclist_ajax_delete_group() {
+    check_ajax_referer('cclist_admin_nonce', 'nonce');
+    
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(array('message' => 'Unauthorized access'));
+    }
+    
+    global $wpdb;
+    $table = $wpdb->prefix . 'cclist_products';
+    $item = sanitize_text_field($_POST['item']);
+    
+    $result = $wpdb->delete(
+        $table,
+        array('item' => $item),
+        array('%s')
+    );
+    
+    if ($result !== false) {
+        wp_send_json_success(array('message' => 'Product group deleted successfully'));
+    } else {
+        wp_send_json_error(array('message' => 'Error deleting product group'));
+    }
+}
+add_action('wp_ajax_cclist_delete_group', 'cclist_ajax_delete_group');
+
+function cclist_ajax_duplicate_group(){
+  check_ajax_referer('cclist_admin_nonce', 'nonce');
+
+  if (!current_user_can('manage_options')) {
+      wp_send_json_error(array('message' => 'Unauthorized access'));
+  }
+
+  $item = sanitize_text_field($_POST['item']);
+  $result = cclist_duplicate_group($item);
+
+
+  if($result){
+    wp_send_json_success(array('message' => 'Product Group duplicated'));
+  } else {
+    wp_send_json_error(array('message' => 'Error duplicating group'));
+  }
+}
+
+add_action('wp_ajax_cclist_duplicate_group', 'cclist_ajax_duplicate_group');
+
+
+function cclist_ajax_get_product_form() {
+    check_ajax_referer('cclist_admin_nonce', 'nonce');
+    
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(array('message' => 'Unauthorized access'));
+    }
+    
+    $product_id = intval($_GET['id']);
+    $product = cclist_get_product($product_id);
+    
+    if (!$product) {
+        wp_send_json_error(array('message' => 'Product not found'));
+    }
+    
+    ob_start();
+    include(CCLIST_PLUGIN_DIR . 'admin/components/forms/product-form.php');
+    $form = ob_get_clean();
+    
+    wp_send_json_success(array('form' => $form));
+}
+add_action('wp_ajax_cclist_get_product_form', 'cclist_ajax_get_product_form');
+
+function cclist_ajax_import_products() {
+    check_ajax_referer('cclist_admin_nonce', 'nonce');
+    
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(array('message' => 'Unauthorized access'));
+    }
+    
+    $json_data = stripslashes($_POST['data']);
+    $result = cclist_import_products($json_data);
+    
+    if (is_wp_error($result)) {
+        wp_send_json_error(array('message' => $result->get_error_message()));
+    } else {
+        wp_send_json_success($result);
+    }
+}
+add_action('wp_ajax_cclist_import_products', 'cclist_ajax_import_products');
+
+// Register REST API endpoints
+function cclist_register_rest_routes() {
+    register_rest_route('cclist/v1', '/products', array(
+        'methods' => 'GET',
+        'callback' => 'cclist_get_products_api',
+        'permission_callback' => '__return_true'
+    ));
+}
+add_action('rest_api_init', 'cclist_register_rest_routes');
+
+// REST API callback
+function cclist_get_products_api() {
+    return cclist_get_products_for_api();
+}

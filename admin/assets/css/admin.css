@@ -1,0 +1,242 @@
+/* CCList Admin Styles */
+
+.cclist-admin {
+    margin: 20px 0;
+}
+
+/* Filters Section */
+.cclist-filters {
+    margin: 20px 0;
+    padding: 15px;
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.cclist-filters select,
+.cclist-filters input[type="text"] {
+    min-width: 200px;
+}
+
+/* Products Table */
+.cclist-products-wrapper {
+    margin-top: 20px;
+}
+
+.column-toggle {
+    width: 30px;
+    text-align: center;
+}
+
+.column-category {
+    width: 15%;
+}
+
+.column-item {
+    width: 30%;
+}
+
+.column-variations {
+    width: 15%;
+}
+
+.column-actions {
+    width: 20%;
+}
+
+/* Group Rows */
+.group-row {
+    cursor: pointer;
+    background: #f8f9fa;
+}
+
+.group-row:hover {
+    background: #f0f0f1;
+}
+
+.group-row .dashicons {
+    transition: transform 0.2s ease;
+}
+
+.group-row.expanded .dashicons {
+    transform: rotate(90deg);
+}
+
+/* Variations Table */
+.variations-row {
+    background: #fff;
+}
+
+.variations-row.hidden {
+    display: none;
+}
+
+.variations-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+
+.variations-table th,
+.variations-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.variations-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+}
+
+/* Modal Styles */
+.cclist-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 100000;
+}
+
+.cclist-modal-content {
+    position: relative;
+    background: #fff;
+    margin: 5% auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.cclist-modal-close {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.cclist-modal-close:hover {
+    color: #000;
+}
+
+/* Form Styles */
+#product-form .form-table th {
+    width: 200px;
+}
+
+#product-form .regular-text {
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Button Styles */
+.button-link {
+    color: #2271b1;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+    margin: 0 5px;
+}
+
+.button-link:hover {
+    color: #135e96;
+}
+
+.button-link.delete-group,
+.button-link.delete-product {
+    color: #d63638;
+}
+
+.button-link.delete-group:hover,
+.button-link.delete-product:hover {
+    color: #b32d2e;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 782px) {
+    .cclist-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .cclist-filters select,
+    .cclist-filters input[type="text"] {
+        width: 100%;
+        min-width: auto;
+    }
+
+    .column-toggle,
+    .column-category,
+    .column-variations {
+        display: none;
+    }
+
+    .column-item {
+        width: 60%;
+    }
+
+    .column-actions {
+        width: 40%;
+    }
+
+    .variations-table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+
+/* Loading States */
+.cclist-loading {
+    position: relative;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.cclist-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #2271b1;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: cclist-spinner 0.6s linear infinite;
+}
+
+@keyframes cclist-spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Success/Error Messages */
+.cclist-message {
+    padding: 10px 15px;
+    margin: 15px 0;
+    border-left: 4px solid;
+}
+
+.cclist-message.success {
+    background: #f0f6e8;
+    border-color: #68de7c;
+}
+
+.cclist-message.error {
+    background: #fcf0f1;
+    border-color: #d63638;
+}
