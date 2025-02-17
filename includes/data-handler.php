@@ -262,7 +262,7 @@ function add_category_if_not_exists($category){
  * Import products from JSON data
  */
 function cclist_import_products($json_data) {
-     error_log("cclist_import_products: Received JSON data: " . $json_data);
+    error_log("cclist_import_products: Received JSON data: " . $json_data);
     $products = json_decode($json_data, true);
     error_log("cclist_import_products: decoded JSON data: " . print_r($products,true));
 
@@ -276,18 +276,24 @@ function cclist_import_products($json_data) {
         return false;
     }
 
+    // Add categories if they don't already exist.
+    if(isset($products['available_categories']) && is_array($products['available_categories'])){
+      foreach($products['available_categories'] as $category){
+        add_category_if_not_exists($category);
+      }
+    }
 
    $success_count = 0;
    foreach ($products as $product) {
-        add_category_if_not_exists($product['category']);
-        if(empty($product['category']) || empty($product['item']) || empty($product['price'])){
-          error_log("skipping empty looking product");
-          continue;
-        }
-        if (cclist_save_product($product)) {
-            $success_count++;
-        }
-    }
+      add_category_if_not_exists($product['category']);
+       if(empty($product['category']) && empty($product['item'])){
+         error_log("skipping empty looking product");
+         continue;
+       }
+       if (cclist_save_product($product)) {
+           $success_count++;
+       }
+   }
 
    return array(
        'success' => true,
@@ -411,17 +417,11 @@ function cclist_import_csv($csv_data) {
             $product_data['discount'] = null; // Default to null
         }
 
-      // Skip variations if any required fields are empty
-      if(empty($product_data['category']) || empty($product_data['item']) || empty($product_data['price'])){
-          error_log("Skipping product due to empty required fields: " . print_r($product_data,true));
-          continue;
-        }
-
       // Make sure price is correctly cast
       if(isset($product_data['price'])){
         $product_data['price'] = (float) $product_data['price'];
       }
-        error_log("adding product" . print_r($product_data, true));
+
         $products[] = $product_data; // Add to the products array
     }
 
