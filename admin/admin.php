@@ -12,7 +12,7 @@ $categories = cclist_get_categories();
     <a href="<?php echo admin_url('admin.php?page=cclist-admin-new'); ?>" class="page-title-action">Add New Product</a>
     
     
-    <textarea id="import-json" placeholder="Paste JSON data here..." style="width: 80%; height: 200px; display:none;"></textarea>
+    <textarea id="import-json" placeholder="Paste JSON data here..." style="width: 80%; height: 200px;"></textarea>
     <button type="button" class="button button-secondary" id="import-products">Import Products</button>
 
     <div class="cclist-filters">
