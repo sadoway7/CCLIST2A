@@ -262,7 +262,7 @@ function add_category_if_not_exists($category){
  * Import products from JSON data
  */
 function cclist_import_products($json_data) {
-     error_log("cclist_import_products: Received JSON data: " . $json_data);
+    error_log("cclist_import_products: Received JSON data: " . $json_data);
     $products = json_decode($json_data, true);
     error_log("cclist_import_products: decoded JSON data: " . print_r($products,true));
 
@@ -365,3 +365,81 @@ function cclist_empty_products_table() {
     $table_name = $wpdb->prefix . 'cclist2a_categories';  // Changed prefix
     return $wpdb->query("TRUNCATE TABLE $table_name");
  }
+
+/**
+ * Import products from a CSV file.
+ *
+ * @param string $csv_data The CSV data as a string.
+ *
+ * @return array|WP_Error An array with 'success', 'imported' (count), and 'total' keys, or a WP_Error on failure.
+ */
+function cclist_import_csv($csv_data) {
+    error_log("cclist_import_csv called. Data: " . $csv_data);
+
+    $lines = explode(PHP_EOL, trim($csv_data)); // Split into lines, trim whitespace
+    if (empty($lines)) {
+        error_log("cclist_import_csv: Empty CSV data.");
+        return new WP_Error('empty_csv', 'No CSV data provided.');
+    }
+
+    // Get the header row
+    $header = str_getcsv(array_shift($lines)); // Remove and get the first line (header)
+    error_log("CSV Header: " . print_r($header, true));
+
+    // Check if the header row has the required columns
+    $required_columns = array('category', 'item', 'size', 'price', 'quantity_min', 'quantity_max');
+    $missing_columns = array_diff($required_columns, $header);
+    if (!empty($missing_columns)) {
+        error_log("cclist_import_csv: Missing required columns: " . implode(', ', $missing_columns));
+        return new WP_Error('invalid_csv', 'CSV data is missing required columns: ' . implode(', ', $missing_columns));
+    }
+    // If 'discount' is not present, we'll add it later with a default value.
+
+
+    $products = array();
+    foreach ($lines as $line) {
+        $row = str_getcsv($line);
+        error_log("CSV Row: " . print_r($row, true));
+
+        // Combine the header and row to create an associative array
+        if (count($header) !== count($row)) {
+            error_log("cclist_import_csv: Mismatch between header and row length. Skipping row.");
+            continue; // Skip rows that don't match the header length
+        }
+        $product_data = array_combine($header, $row);
+         if ($product_data === false) {
+            error_log("cclist_import_csv: array_combine failed. Skipping row.");
+            continue; // Skip rows that don't match the header length
+        }
+
+        // Add 'discount' if it doesn't exist
+        if (!isset($product_data['discount'])) {
+            $product_data['discount'] = null; // Default to null
+        }
+
+      // Make sure price is correctly cast
+      if(isset($product_data['price'])){
+        $product_data['price'] = (float) $product_data['price'];
+      }
+
+        $products[] = $product_data; // Add to the products array
+    }
+
+    error_log("cclist_import_csv: Processed products: " . print_r($products, true));
+
+    $success_count = 0;
+    foreach ($products as $product) {
+        // Add category
+        add_category_if_not_exists($product['category']);
+
+        if (cclist_save_product($product)) {
+            $success_count++;
+        }
+    }
+
+    return array(
+        'success' => true,
+        'imported' => $success_count,
+        'total' => count($products)
+    );
+}

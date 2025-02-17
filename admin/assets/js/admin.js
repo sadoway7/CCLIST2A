@@ -222,7 +222,8 @@ jQuery(document).ready(function($) {
     });
 
    // Import Products
-    $('#import-products').on('click', function(e) {
+     $('#import-products').on('click', function(e) {
+       //CSV Import
         e.preventDefault(); // Prevent default button behavior
         const jsonData = $('#import-json').val();
 
@@ -230,7 +231,6 @@ jQuery(document).ready(function($) {
             showMessage('Please paste JSON data into the textarea.', 'error');
             return;
         }
-
         try {
             const data = JSON.parse(jsonData);
             console.log("data to be imported", data);
@@ -246,12 +246,11 @@ jQuery(document).ready(function($) {
                       console.log(response);
                         showMessage(response.data.message, 'error');
                     }
-                });
-            } catch (error) {
-                showMessage('Invalid JSON file', 'error');
-            }
-        });
-
+            });
+        } catch (error) {
+            showMessage('Invalid JSON file', 'error');
+        }
+    });
     // Empty Products Table
     $('#empty-products').on('click', function() {
         if (!confirm('Are you sure you want to empty the products table? This cannot be undone.')) {
@@ -288,5 +287,33 @@ jQuery(document).ready(function($) {
                 showMessage('Error emptying categories table.', 'error');
             }
         });
+    });
+    // CSV Import
+    $('#import-csv').on('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) {
+            console.log("No file selected");
+            return;
+        }
+
+        // Check if the file is a CSV file
+        if (file.type !== 'text/csv') {
+            showMessage('Please select a CSV file.', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const csvData = e.target.result;
+            $.post(cclistAdmin.ajaxUrl, {
+                action: 'cclist_import_csv',
+                data: csvData,
+                nonce: cclistAdmin.nonce
+            }, function(response) {
+                // Handle success/error (similar to JSON import)
+                 showMessage(response.data, 'error');
+            });
+        };
+        reader.readAsText(file);
     });
 });
