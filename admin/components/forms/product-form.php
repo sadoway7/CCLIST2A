@@ -28,7 +28,7 @@ $categories = cclist_get_categories();
     <h1><?php echo $is_edit ? 'Edit Product' : 'Add New Product'; ?></h1>
     
     <form id="product-form" method="post" action="">
-        <?php wp_nonce_field('cclist_product_nonce'); ?>
+        <?php wp_nonce_field('cclist_admin_nonce'); ?>
         <input type="hidden" name="action" value="cclist_save_product">
         <?php if ($is_edit): ?>
             <input type="hidden" name="item_name" value="<?php echo esc_attr($product['item']); ?>">
