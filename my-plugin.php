@@ -31,14 +31,15 @@ function cclist_activate() {
     global $wpdb;
     $charset_collate = $wpdb->get_charset_collate();
 
-    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    $table_categories = $wpdb->prefix . 'cclist2a_categories';
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');    
+    $table_categories = $wpdb->prefix . 'cclist_categories';
     $sql_categories = "CREATE TABLE IF NOT EXISTS $table_categories (
         id mediumint(9) NOT NULL AUTO_INCREMENT,
         category_name varchar(100) NOT NULL,
         PRIMARY KEY  (id)
     ) $charset_collate;";
     dbDelta($sql_categories);
+
     // Create products table
     $table_products = $wpdb->prefix . 'cclist2a_products';
     $sql_products = "CREATE TABLE IF NOT EXISTS $table_products (
@@ -58,6 +59,14 @@ function cclist_activate() {
     ) $charset_collate;";
 
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    $table_categories = $wpdb->prefix . 'cclist2a_categories';
+        $sql_categories = "CREATE TABLE IF NOT EXISTS $table_categories (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            category_name varchar(100) NOT NULL,
+            PRIMARY KEY  (id)
+        ) $charset_collate;";
+
+    dbDelta($sql_categories);
     dbDelta($sql_products);
 
     // Save database version
@@ -255,7 +264,7 @@ function cclist_ajax_import_products() {
         wp_send_json_error(array('message' => 'Unauthorized access'));
     }
     error_log("cclist_ajax_import_products: Function called");
-    error_log("cclist_ajax_import_products: raw POST data: " . print_r($_POST, true));
+    error_log("cclist_ajax_import_products: raw POST data: " . print_r($_POST, true));    
     $json_data = $_POST['data'];
     error_log("cclist_ajax_import_products: json_data after stripslashes: " . $json_data);
     $result = cclist_import_products($json_data);
@@ -315,23 +324,4 @@ function cclist_ajax_empty_categories_table() {
   else{
     wp_send_json_error(array('message' => 'Could not empty table'));
   }
-}
-
-// AJAX handler for CSV import
-add_action('wp_ajax_cclist_import_csv', 'cclist_ajax_import_csv');
-function cclist_ajax_import_csv() {
-    check_ajax_referer('cclist_admin_nonce', 'nonce');
-
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error(array('message' => 'Unauthorized access'));
-    }
-
-    $csv_data = $_POST['data'];
-    $result = cclist_import_csv($csv_data);
-
-    if (is_wp_error($result)) {
-        wp_send_json_error(array('message' => $result->get_error_message()));
-    } else {
-        wp_send_json_success($result); // Send back success/failure and number of imported
-    }
 }

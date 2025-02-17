@@ -221,6 +221,7 @@ jQuery(document).ready(function($) {
         });
     });
 
+<<<<<<< HEAD
       $('#import-csv').on('change', function(e) {
         const file = e.target.files[0];
         if (!file) {
@@ -247,5 +248,74 @@ jQuery(document).ready(function($) {
             });
         };
         reader.readAsText(file);
+=======
+   // Import Products
+    $('#import-products').on('click', function(e) {
+        e.preventDefault(); // Prevent default button behavior
+        const jsonData = $('#import-json').val();
+
+        if (!jsonData) {
+            showMessage('Please paste JSON data into the textarea.', 'error');
+            return;
+        }
+
+        try {
+            const data = JSON.parse(jsonData);
+            console.log("data to be imported", data);
+            $.post(cclistAdmin.ajaxUrl, {
+                action: 'cclist_import_products',
+                data: JSON.stringify(data), // Send stringified JSON
+                nonce: cclistAdmin.nonce
+            }, function(response) {
+                if (response.success) {
+                    showMessage(`Successfully imported ${response.data.imported} products`);
+                    location.reload();
+                } else {
+                      console.log(response);
+                        showMessage(response.data.message, 'error');
+                    }
+                });
+            } catch (error) {
+                showMessage('Invalid JSON file', 'error');
+            }
+        });
+
+    // Empty Products Table
+    $('#empty-products').on('click', function() {
+        if (!confirm('Are you sure you want to empty the products table? This cannot be undone.')) {
+            return;
+        }
+
+        $.post(cclistAdmin.ajaxUrl, {
+            action: 'cclist_empty_products_table',
+            nonce: cclistAdmin.nonce
+        }, function(response) {
+            if (response.success) {
+                showMessage('Products table emptied successfully.');
+                location.reload(); // Refresh the page
+            } else {
+                showMessage('Error emptying products table.', 'error');
+            }
+        });
+    });
+
+      // Empty Categories Table
+      $('#empty-categories').on('click', function() {
+        if (!confirm('Are you sure you want to empty the categories table? This cannot be undone.')) {
+            return;
+        }
+
+        $.post(cclistAdmin.ajaxUrl, {
+            action: 'cclist_empty_categories_table',
+            nonce: cclistAdmin.nonce
+        }, function(response) {
+            if (response.success) {
+                showMessage('Categories table emptied successfully.');
+                location.reload(); // Refresh the page
+            } else {
+                showMessage('Error emptying categories table.', 'error');
+            }
+        });
+>>>>>>> parent of 6e34678 (55)
     });
 });

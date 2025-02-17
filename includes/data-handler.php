@@ -262,7 +262,7 @@ function add_category_if_not_exists($category){
  * Import products from JSON data
  */
 function cclist_import_products($json_data) {
-    error_log("cclist_import_products: Received JSON data: " . $json_data);
+     error_log("cclist_import_products: Received JSON data: " . $json_data);
     $products = json_decode($json_data, true);
     error_log("cclist_import_products: decoded JSON data: " . print_r($products,true));
 
@@ -364,6 +364,7 @@ function cclist_empty_products_table() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'cclist2a_categories';  // Changed prefix
     return $wpdb->query("TRUNCATE TABLE $table_name");
+<<<<<<< HEAD
  }
 
 /**
@@ -445,3 +446,6 @@ function cclist_import_csv($csv_data) {
         'total' => count($products)
     );
 }
+=======
+ }
+>>>>>>> parent of 6e34678 (55)
