@@ -11,12 +11,9 @@ $categories = cclist_get_categories();
     <h1 class="wp-heading-inline">CCList Products</h1>
     <a href="<?php echo admin_url('admin.php?page=cclist-admin-new'); ?>" class="page-title-action">Add New Product</a>
     
-    <input type="file" id="import-products" accept=".json" style="display: none;">
-    <label for="import-products" class="button button-secondary">Import Products</label>
-    <button type="button" class="button button-secondary" id="empty-products">Empty Products Table</button>
-    <button type="button" class="button button-secondary" id="empty-categories">Empty Categories Table</button>
-
-
+    
+    <textarea id="import-json" placeholder="Paste JSON data here..." style="width: 80%; height: 200px; display:none;"></textarea>
+    <button type="button" class="button button-secondary" id="import-products">Import Products</button>
 
     <div class="cclist-filters">
         <select id="category-filter">

@@ -221,28 +221,28 @@ jQuery(document).ready(function($) {
         });
     });
 
-    // Import/Export
-   $('#import-products').on('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) {
-          console.log("No file selected");
-          return; // Add this
+   // Import Products
+    $('#import-products').on('click', function(e) {
+        e.preventDefault(); // Prevent default button behavior
+        const jsonData = $('#import-json').val();
+
+        if (!jsonData) {
+            showMessage('Please paste JSON data into the textarea.', 'error');
+            return;
         }
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const data = JSON.parse(e.target.result);
-                console.log("data to be imported", data);
-                $.post(cclistAdmin.ajaxUrl, {
-                    action: 'cclist_import_products',
-                    data: JSON.stringify(data),
-                    nonce: cclistAdmin.nonce
-                }, function(response) {
-                    if (response.success) {
-                        showMessage(`Successfully imported ${response.data.imported} products`);
-                        setTimeout(() => location.reload(), 1000);
-                    } else {
+        try {
+            const data = JSON.parse(jsonData);
+            console.log("data to be imported", data);
+            $.post(cclistAdmin.ajaxUrl, {
+                action: 'cclist_import_products',
+                data: JSON.stringify(data), // Send stringified JSON
+                nonce: cclistAdmin.nonce
+            }, function(response) {
+                if (response.success) {
+                    showMessage(`Successfully imported ${response.data.imported} products`);
+                    location.reload();
+                } else {
                       console.log(response);
                         showMessage(response.data.message, 'error');
                     }
@@ -250,9 +250,7 @@ jQuery(document).ready(function($) {
             } catch (error) {
                 showMessage('Invalid JSON file', 'error');
             }
-        };
-        reader.readAsText(file);
-    });
+        });
 
     // Empty Products Table
     $('#empty-products').on('click', function() {
