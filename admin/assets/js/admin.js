@@ -6,10 +6,10 @@ jQuery(document).ready(function($) {
     function toggleGroup($row) {
         const $icon = $row.find('.dashicons');
         const $variationsRow = $row.next('.variations-row');
-
+        
         $row.toggleClass('expanded');
         $variationsRow.toggleClass('hidden');
-
+        
         if ($row.hasClass('expanded')) {
             $icon.css('transform', 'rotate(90deg)');
         } else {
@@ -49,10 +49,10 @@ jQuery(document).ready(function($) {
             const $row = $(this);
             const rowCategory = $row.data('category').toLowerCase();
             const rowItem = $row.data('item').toLowerCase();
-
+            
             const categoryMatch = !category || rowCategory === category;
             const searchMatch = !search || rowItem.includes(search);
-
+            
             if (categoryMatch && searchMatch) {
                 $row.show();
                 $row.next('.variations-row').show();
@@ -68,17 +68,17 @@ jQuery(document).ready(function($) {
     // Modal handling
     const $modal = $('#edit-product-modal');
     const $modalContent = $('.cclist-modal-content');
-
+    
     function openModal() {
         $modal.fadeIn(200);
     }
-
+    
     function closeModal() {
         $modal.fadeOut(200);
     }
-
+    
     $('.cclist-modal-close').on('click', closeModal);
-
+    
     $(window).on('click', function(e) {
         if ($(e.target).is($modal)) {
             closeModal();
@@ -89,7 +89,7 @@ jQuery(document).ready(function($) {
     $('.edit-product').on('click', function(e) {
         e.preventDefault();
         const productId = $(this).data('id');
-
+        
         // Load form via AJAX
         $.get(cclistAdmin.ajaxUrl, {
             action: 'cclist_get_product_form',
@@ -109,11 +109,11 @@ jQuery(document).ready(function($) {
     $('.delete-product').on('click', function(e) {
         e.preventDefault();
         const productId = $(this).data('id');
-
+        
         if (!confirm('Are you sure you want to delete this product?')) {
             return;
         }
-
+        
         $.post(cclistAdmin.ajaxUrl, {
             action: 'cclist_delete_product',
             id: productId,
@@ -131,11 +131,11 @@ jQuery(document).ready(function($) {
     $('.delete-group').on('click', function(e) {
         e.preventDefault();
         const item = $(this).data('item');
-
+        
         if (!confirm('Are you sure you want to delete this entire group and all its variations?')) {
             return;
         }
-
+        
         $.post(cclistAdmin.ajaxUrl, {
             action: 'cclist_delete_group',
             item: item,
@@ -174,7 +174,7 @@ jQuery(document).ready(function($) {
     $('.edit-group').on('click', function(e) {
         e.preventDefault();
         const item = $(this).data('item');
-
+        
         // Redirect to new product form with group data
         window.location.href = `${cclistAdmin.adminUrl}?page=cclist-admin-new&group=${item}`;
     });
@@ -183,7 +183,7 @@ jQuery(document).ready(function($) {
     function showMessage(message, type = 'success') {
         const $message = $(`<div class="cclist-message ${type}">${message}</div>`);
         $('.cclist-admin').prepend($message);
-
+        
         setTimeout(function() {
             $message.fadeOut(300, function() {
                 $(this).remove();
@@ -195,7 +195,7 @@ jQuery(document).ready(function($) {
     function setLoading($element) {
         $element.addClass('cclist-loading');
     }
-
+    
     function removeLoading($element) {
         $element.removeClass('cclist-loading');
     }
@@ -206,10 +206,10 @@ jQuery(document).ready(function($) {
         console.log('Form submit handler attached');
         const $form = $(this);
         setLoading($form);
-
+        
         $.post(cclistAdmin.ajaxUrl, $form.serialize(), function(response) {
             removeLoading($form);
-
+            
             if (response.success) {
                 if ($modal.is(':visible')) {
                     closeModal();
@@ -221,45 +221,7 @@ jQuery(document).ready(function($) {
         });
     });
 
-    // Empty Products Table
-    $('#empty-products').on('click', function() {
-        if (!confirm('Are you sure you want to empty the products table? This cannot be undone.')) {
-            return;
-        }
-
-        $.post(cclistAdmin.ajaxUrl, {
-            action: 'cclist_empty_products_table',
-            nonce: cclistAdmin.nonce
-        }, function(response) {
-            if (response.success) {
-                showMessage('Products table emptied successfully.');
-                location.reload(); // Refresh the page
-            } else {
-                showMessage('Error emptying products table.', 'error');
-            }
-        });
-    });
-
-      // Empty Categories Table
-      $('#empty-categories').on('click', function() {
-        if (!confirm('Are you sure you want to empty the categories table? This cannot be undone.')) {
-            return;
-        }
-
-        $.post(cclistAdmin.ajaxUrl, {
-            action: 'cclist_empty_categories_table',
-            nonce: cclistAdmin.nonce
-        }, function(response) {
-            if (response.success) {
-                showMessage('Categories table emptied successfully.');
-                location.reload(); // Refresh the page
-            } else {
-                showMessage('Error emptying categories table.', 'error');
-            }
-        });
-    });
-    // CSV Import
-    $('#import-csv').on('change', function(e) {
+      $('#import-csv').on('change', function(e) {
         const file = e.target.files[0];
         if (!file) {
             console.log("No file selected");
@@ -281,7 +243,7 @@ jQuery(document).ready(function($) {
                 nonce: cclistAdmin.nonce
             }, function(response) {
                 // Handle success/error (similar to JSON import)
-                 showMessage(response.data, 'error');
+                showMessage(response.data, 'error');
             });
         };
         reader.readAsText(file);
