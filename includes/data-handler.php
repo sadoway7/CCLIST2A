@@ -157,6 +157,12 @@ function cclist_save_product($data) {
       );
       error_log("Deleting variations for item: " . $data['item_name'] . ". Result: " . $deleted);
     }
+
+    if (!is_array($variations) || empty($variations)) {
+        error_log("Error: Variations data is not an array or is empty.");
+        return false; // Or throw an exception, or return a WP_Error
+    }
+
     // Insert variations
     foreach ($variations as $variation) {
         // Skip variations if price is empty
@@ -174,14 +180,16 @@ function cclist_save_product($data) {
             'discount' => !empty($variation['discount']) ? floatval($variation['discount']) : null
         );
 
+        error_log("Inserting variation: " . print_r($fields, true));
       $inserted =  $wpdb->insert(
             $table,
             $fields,
             array('%s', '%s', '%s', '%f', '%d', '%d', '%f')
         );
-      error_log("Inserting variation: " . print_r($fields, true) . ". Result: " . $inserted);
       if($inserted === false){
         error_log("WPDB Error:" . $wpdb->last_error);
+      } else {
+        error_log("Variation inserted successfully. Insert ID: " . $wpdb->insert_id);
       }
     }
 
