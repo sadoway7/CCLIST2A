@@ -1,3 +1,4 @@
+console.log("admin.js loaded");
 jQuery(document).ready(function($) {
     console.log('ajaxurl:', cclistAdmin.ajaxUrl);
 
