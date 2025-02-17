@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
  */
 function cclist_get_products_for_api() {
     global $wpdb;
-    $table = $wpdb->prefix . 'cclist_products';
+    $table = $wpdb->prefix . 'cclist2a_products'; // Changed prefix
 
     try {
         // Get all products ordered by item name and quantity_min
@@ -95,7 +95,7 @@ function cclist_get_products_for_api() {
  */
 function cclist_get_products_grouped() {
     global $wpdb;
-    $table = $wpdb->prefix . 'cclist_products';
+    $table = $wpdb->prefix . 'cclist2a_products'; // Changed prefix
 
     $products = $wpdb->get_results(
         "SELECT * FROM $table ORDER BY category ASC, item ASC, quantity_min ASC",
@@ -128,7 +128,7 @@ function cclist_get_products_grouped() {
  */
 function cclist_get_product($id) {
     global $wpdb;
-    $table = $wpdb->prefix . 'cclist_products';
+    $table = $wpdb->prefix . 'cclist2a_products'; // Changed prefix
 
     return $wpdb->get_row(
         $wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id),
@@ -141,7 +141,7 @@ function cclist_get_product($id) {
  */
 function cclist_save_product($data) {
     global $wpdb;
-    $table = $wpdb->prefix . 'cclist_products';
+    $table = $wpdb->prefix . 'cclist2a_products'; // Changed prefix
 
     error_log("cclist_save_product called. Data: " . print_r($data, true));
 
@@ -227,7 +227,7 @@ function cclist_save_product($data) {
  */
 function cclist_delete_product($id) {
     global $wpdb;
-    $table = $wpdb->prefix . 'cclist_products';
+    $table = $wpdb->prefix . 'cclist2a_products'; // Changed prefix
 
     return $wpdb->delete(
         $table,
@@ -241,8 +241,7 @@ function cclist_delete_product($id) {
  */
 function cclist_get_categories() {
     global $wpdb;
-    $table = $wpdb->prefix . 'cclist_products';
-
+     $table = $wpdb->prefix . 'cclist2a_products';
     return $wpdb->get_col("SELECT DISTINCT category FROM $table ORDER BY category ASC");
 }
 
@@ -252,7 +251,7 @@ function cclist_get_categories() {
 
 function add_category_if_not_exists($category){
    global $wpdb;
-    $table_categories = $wpdb->prefix . 'cclist_categories';
+    $table_categories = $wpdb->prefix . 'cclist2a_categories'; // Changed prefix
     if( !$wpdb->get_row("SELECT * FROM $table_categories WHERE category_name = '" . $category . "'") ){
       $wpdb->insert($table_categories, array('category_name' => $category));
       error_log("adding category" . $category);
@@ -263,7 +262,7 @@ function add_category_if_not_exists($category){
  * Import products from JSON data
  */
 function cclist_import_products($json_data) {
-    error_log("cclist_import_products: Received JSON data: " . $json_data);
+     error_log("cclist_import_products: Received JSON data: " . $json_data);
     $products = json_decode($json_data, true);
     error_log("cclist_import_products: decoded JSON data: " . print_r($products,true));
 
@@ -308,7 +307,7 @@ function cclist_import_products($json_data) {
 */
 function cclist_duplicate_group($item_name){
     global $wpdb;
-    $table_products = $wpdb->prefix . 'cclist_products';
+    $table_products = $wpdb->prefix . 'cclist2a_products'; // Changed prefix
 
     // Get all variations for a product by item name
     $products = $wpdb->get_results(
@@ -353,7 +352,7 @@ function cclist_duplicate_group($item_name){
  */
 function cclist_empty_products_table() {
     global $wpdb;
-    $table_products = $wpdb->prefix . 'cclist_products';
+    $table_products = $wpdb->prefix . 'cclist2a_products'; // Changed prefix
     return $wpdb->query("TRUNCATE TABLE $table_products");
 }
 
@@ -363,6 +362,6 @@ function cclist_empty_products_table() {
 
  function cclist_empty_categories_table(){
     global $wpdb;
-    $table_name = $wpdb->prefix . 'cclist_categories';
+    $table_name = $wpdb->prefix . 'cclist2a_categories';  // Changed prefix
     return $wpdb->query("TRUNCATE TABLE $table_name");
  }
